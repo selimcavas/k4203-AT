@@ -15,7 +15,7 @@ import os
 
 def waitResponse():
     response = b''
-    while not response.endswith(b'\r\nOK\r\n') and not response.endswith(b'\r\nERROR\r\n') and 'ERROR' not in response.decode():
+    while 'OK' not in response.decode() and 'ERROR' not in response.decode():
 
         response += modem.readline()
         response_str = response.decode()
@@ -23,6 +23,12 @@ def waitResponse():
         print(response_str)
 
     time.sleep(2)
+
+def executeATcommand(command):
+    print('\nSending ' + command + ' command')
+    cmd = bytes(command + '\r\n', 'utf-8')
+    modem.write(cmd)
+    waitResponse()
 
 # Switch the modem to the modem mode
 os.system('sudo usb_modeswitch -c /etc/k4203-modem.conf')
@@ -34,27 +40,17 @@ modem = serial.Serial(port='/dev/ttyUSB0', baudrate=9600,
 
 print('Modem is ready!')
 
+
 try:
     time.sleep(0.5)
-    print('Sending AT CURC command')
-    modem.write(b'AT^CURC=0\r\n')
-    waitResponse()
 
-    print('Sending AT+CNMI? command')
-    modem.write(b'AT+CNMI?\r\n')
-    waitResponse()
+    executeATcommand('AT')
+    executeATcommand('AT^CURC=0')
+    executeATcommand('AT+CNMI?')
+    executeATcommand('AT+CNMI=2,0,0,2,1')
+    executeATcommand('AT+CNMI?')
+    executeATcommand('AT+CMGF?')
 
-    print('Sending AT+CNMI="2,0,0,2,1" command')
-    modem.write(b'AT+CNMI="2,0,0,2,1"\r\n')
-    waitResponse()
-
-    print('Sending AT+CMGF=1 command')
-    modem.write(b'AT+CMGF=1\r\n')
-    waitResponse()
-
-    print('Sending AT+CMGF? command')
-    modem.write(b'AT+CMGF?\r\n')
-    waitResponse()
 finally:
     print('Closing modem')
     modem.close()
