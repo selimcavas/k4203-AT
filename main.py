@@ -189,6 +189,12 @@ def execute_pdu_SMS(cmgs_number, pdu_message):
     response = wait_response()
     output_text.insert(tk.END, response.decode() + '\n')
 
+# Move the modem config file to the /etc/ directory
+if not (os.path.exists('/etc/k4203-modem.conf')):
+    print('Modem config file not found!')
+    os.system('sudo mv k4203-modem.conf /etc/')
+else:
+    print('Modem config file found!')
 
 # Switch the modem to the modem mode
 os.system('sudo usb_modeswitch -c /etc/k4203-modem.conf')

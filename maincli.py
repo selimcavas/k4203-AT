@@ -117,7 +117,12 @@ def execute_pdu_SMS(cmgs_number, pdu_message):
     
     response = wait_response()
 
-
+# Move the modem config file to the /etc/ directory
+if not (os.path.exists('/etc/k4203-modem.conf')):
+    print('Modem config file not found!')
+    os.system('sudo mv k4203-modem.conf /etc/')
+else:
+    print('Modem config file found!')
 # Switch the modem to the modem mode
 os.system('sudo usb_modeswitch -c /etc/k4203-modem.conf')
 # Stop the ModemManager service
@@ -132,30 +137,37 @@ execute_AT_command('AT')
 execute_AT_command('AT^CURC=0')
 execute_AT_command('AT+CNMI=2,0,0,2,1')
 execute_AT_command('AT+CMGF=0')
-print('Setup done!')
+print('Setup done! \n')
+time.sleep(0.5)
+os.system('clear')
 
 while True:
     # list options for the user
-    print('1. Get all SMS PDU\'s')
-    print('2. Get unread SMS PDU\'s')
-    print('3. Send text SMS')
-    print('4. Send PDU SMS')
-    print('5. Exit')
+    print('Select an option: \n')
+    print('1. Execute AT command')
+    print('2. Get all SMS PDU\'s')
+    print('3. Get unread SMS PDU\'s')
+    print('4. Send text SMS')
+    print('5. Send PDU SMS')
+    print('6. Exit')
+    print('\n')
     option = input('Enter your option: ')
     if option == '1':
+        command = input('Enter the command: ')
+        execute_AT_command(command)
+    if option == '2':
         get_all_SMS_PDU()
-    elif option == '2':
-        get_unread_SMS_PDU()
     elif option == '3':
+        get_unread_SMS_PDU()
+    elif option == '4':
         recipient_number = input('Enter the recipient number: ')
         message = input('Enter the message: ')
         execute_text_SMS(recipient_number, message)
-    elif option == '4':
+    elif option == '5':
         cmgs_number = input('Enter the CMGS number: ')
         pdu_message = input('Enter the PDU message: ')
         execute_pdu_SMS(cmgs_number, pdu_message)
-    elif option == '5':
+    elif option == '6':
         break
-    else:
+    else: #fix this
         print('Invalid option!')
-        
