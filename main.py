@@ -2,7 +2,7 @@
 # ------------------------
 # Author:  Selim Çavaş
 # Date:    July 2023
-#
+# GUI Version
 # Code to execute and read AT commands for Vodafone Huawei K4203 USB Modem
 # ------------------------
 
