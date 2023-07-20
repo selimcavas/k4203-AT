@@ -143,15 +143,20 @@ os.system('clear')
 
 while True:
     # list options for the user
+    print('------------------------')
     print('Select an option: \n')
     print('1. Execute AT command')
     print('2. Get all SMS PDU\'s')
     print('3. Get unread SMS PDU\'s')
     print('4. Send text SMS')
     print('5. Send PDU SMS')
-    print('6. Exit')
+    print('6. Clear screen')
+    print('7. Exit')
     print('\n')
-    option = input('Enter your option: ')
+    option = input('Enter your option (1-7): ')
+    if len(option) != 1 or option not in ['1', '2', '3', '4', '5', '6', '7']:
+        print('Invalid option!')
+        continue
     if option == '1':
         command = input('Enter the command: ')
         execute_AT_command(command)
@@ -168,6 +173,7 @@ while True:
         pdu_message = input('Enter the PDU message: ')
         execute_pdu_SMS(cmgs_number, pdu_message)
     elif option == '6':
+        os.system('clear')
+    elif option == '7':
         break
-    else: #fix this
-        print('Invalid option!')
+    
