@@ -6,6 +6,8 @@
 # Code to execute and read AT commands for Vodafone Huawei K4203 USB Modem
 # ------------------------
 
+import cmd
+import sys
 import serial
 import time
 import os
@@ -15,19 +17,21 @@ from smspdudecoder.fields import SMSDeliver
 from io import StringIO
 
 
-def wait_response():
+def wait_response(hideOut = False):
     response = b''
     while 'OK' not in response.decode() and 'ERROR' not in response.decode() and not response.decode().strip().endswith('>'):
         response += modem.readline()
         response_str = response.decode()
         response_str = response_str[2:-2]
 
-    print(response.decode())
+    if not hideOut:
+        print(response.decode())
     time.sleep(0.5)
     return response
 
-def execute_AT_command(command):
-    print(command)
+def execute_AT_command(command, hideOut = False):
+    if not hideOut:
+        print(command)
     
     if not command.startswith('AT'):
         print('Error: Command must start with "AT"\n')
@@ -35,7 +39,7 @@ def execute_AT_command(command):
     
     cmd = bytes(command + '\r\n', 'utf-8')
     modem.write(cmd)
-    response = wait_response()
+    response = wait_response(hideOut=hideOut)
     return response
 
 # Function to provide SMS info from a response string
@@ -117,63 +121,98 @@ def execute_pdu_SMS(cmgs_number, pdu_message):
     
     response = wait_response()
 
-# Move the modem config file to the /etc/ directory
-if not (os.path.exists('/etc/k4203-modem.conf')):
-    print('Modem config file not found!')
-    os.system('sudo mv k4203-modem.conf /etc/')
-else:
-    print('Modem config file found!')
-# Switch the modem to the modem mode
-os.system('sudo usb_modeswitch -c /etc/k4203-modem.conf')
-# Stop the ModemManager service
-os.system('sudo systemctl stop ModemManager.service')
+cmdargs = False
+len_cmdargs = len(sys.argv)
+option = ''
+
+if len_cmdargs > 1:
+        cmdargs = True
+        option = sys.argv[1]
+
+if option == "s" or not cmdargs:
+     # Move the modem config file to the /etc/ directory
+    if not (os.path.exists('/etc/k4203-modem.conf')):
+        print('Modem config file not found!')
+        os.system('sudo mv k4203-modem.conf /etc/')
+    else:
+        print('Modem config file found!')
+    # Switch the modem to the modem mode
+    os.system('sudo usb_modeswitch -c /etc/k4203-modem.conf')
+    # Stop the ModemManager service
+    os.system('sudo systemctl stop ModemManager.service')
+    # Establish connection with the modem
+    modem = serial.Serial(port='/dev/ttyUSB0', baudrate=9600,
+                        rtscts=True, dsrdtr=True, timeout=0.1)
+
+    print('Modem is ready!')
+    execute_AT_command('AT')
+    execute_AT_command('AT^CURC=0')
+    execute_AT_command('AT+CNMI=2,0,0,2,1')
+    execute_AT_command('AT+CMGF=0')
+    print('Setup done! \n')
+
 # Establish connection with the modem
 modem = serial.Serial(port='/dev/ttyUSB0', baudrate=9600,
-                      rtscts=True, dsrdtr=True, timeout=0.1)
-
-print('Modem is ready!')
-
-execute_AT_command('AT')
-execute_AT_command('AT^CURC=0')
-execute_AT_command('AT+CNMI=2,0,0,2,1')
-execute_AT_command('AT+CMGF=0')
-print('Setup done! \n')
+                        rtscts=True, dsrdtr=True, timeout=0.1)
 time.sleep(0.5)
 os.system('clear')
 
 while True:
     # list options for the user
-    print('------------------------')
-    print('Select an option: \n')
-    print('1. Execute AT command')
-    print('2. Get all SMS PDU\'s')
-    print('3. Get unread SMS PDU\'s')
-    print('4. Send text SMS')
-    print('5. Send PDU SMS')
-    print('6. Clear screen')
-    print('7. Exit')
-    print('\n')
-    option = input('Enter your option (1-7): ')
-    if len(option) != 1 or option not in ['1', '2', '3', '4', '5', '6', '7']:
+    if not cmdargs:
+        print('------------------------')
+        print('Select an option: \n')
+        print('1. Execute AT command')
+        print('2. Get all SMS PDU\'s')
+        print('3. Get unread SMS PDU\'s')
+        print('4. Send text SMS')
+        print('5. Send PDU SMS')
+        print('6. Clear screen')
+        print('7. Exit')
+        print('\n')
+        option = input('Enter your option (1-7): ')
+
+    if len(option) != 1 or option not in ['1', '2', '3', '4', '5', '6', '7', 's']:
         print('Invalid option!')
         continue
+
     if option == '1':
-        command = input('Enter the command: ')
+        if len_cmdargs > 2:
+            command = sys.argv[2]
+        else:
+            command = input('Enter the command: ')
         execute_AT_command(command)
+
     if option == '2':
         get_all_SMS_PDU()
+
     elif option == '3':
         get_unread_SMS_PDU()
+
     elif option == '4':
-        recipient_number = input('Enter the recipient number: ')
-        message = input('Enter the message: ')
+        if len_cmdargs > 2:
+            recipient_number = sys.argv[2]
+            message = sys.argv[3]
+        else:
+            recipient_number = input('Enter the recipient number: ')
+            message = input('Enter the message: ')
         execute_text_SMS(recipient_number, message)
+
     elif option == '5':
-        cmgs_number = input('Enter the CMGS number: ')
-        pdu_message = input('Enter the PDU message: ')
+        if len_cmdargs > 2:
+            cmgs_number = sys.argv[2]
+            pdu_message = sys.argv[3]
+        else:
+            cmgs_number = input('Enter the CMGS number: ')
+            pdu_message = input('Enter the PDU message: ')
         execute_pdu_SMS(cmgs_number, pdu_message)
+
     elif option == '6':
         os.system('clear')
+
     elif option == '7':
+        break
+
+    if cmdargs:
         break
     
