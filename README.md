@@ -22,3 +22,25 @@ The program provides the following features:
 - Get unread SMS PDU's: You can retrieve only the unread SMS PDU's stored on the modem and display their information.
 - Send text SMS: You can send a text SMS to a recipient by entering their phone number and the message.
 - Send PDU SMS: You can send a PDU SMS to a recipient by entering the CMGS number and the PDU message.
+
+## Command-line arguments
+
+The program accepts the following command-line arguments in the CLI:
+
+- `1 <AT Command>` Execute AT Command
+- `2` Get all SMS PDU's
+- `3` Get unread SMS PDU's
+- `4 phone_num messsage` Send text SMS
+- `5 cmgs pdu` Send PDU SMS
+
+However setup is not done automatically if command-line arguments are used, first do the setup with:
+
+- `s` Only do modem setup
+
+To use a command-line argument, run the program with the argument followed by any required additional arguments. For example:
+
+```
+python3 maincli.py s
+python3 maincli.py 1 AT
+```
+
